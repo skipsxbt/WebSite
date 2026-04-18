@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Yusuf Düzgün - Kişisel portfolio sitesi. Projeler, deneyimler ve daha fazlası.">
+    <meta name="keywords" content="Yusuf Düzgün, portfolio, projeler, yazılım, geliştirici">
+    <meta name="author" content="Yusuf Düzgün">
+    <title>Yusuf Düzgün — Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Check for saved theme preference or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</head>
+<body>
+    <!-- Ambient floating particles -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav id="main-nav">
+        <div class="nav-inner">
+            <a href="#hero" class="nav-logo">YD</a>
+            <div class="nav-links">
+                <a href="#about" class="nav-link" data-text="Hakkımda">Hakkımda</a>
+                <a href="#projects" class="nav-link" data-text="Projeler">Projeler</a>
+                <a href="#skills" class="nav-link" data-text="Yetenekler">Yetenekler</a>
+                <a href="#contact" class="nav-link" data-text="İletişim">İletişim</a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Gece/Gündüz Modu">
+                    <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <button id="nav-toggle" aria-label="Menü">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay"></div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu">
+        <a href="#about" class="mobile-link">Hakkımda</a>
+        <a href="#projects" class="mobile-link">Projeler</a>
+        <a href="#skills" class="mobile-link">Yetenekler</a>
+        <a href="#contact" class="mobile-link">İletişim</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="hero-split">
+            <div class="hero-left">
+                <div class="hero-badge" id="hero-badge">
+                    <span class="badge-dot"></span>
+                    Hoş Geldiniz
+                </div>
+                <h1 id="hero-title" class="hero-title">
+                    <span class="title-line">
+                        <span class="title-word" style="--delay: 0">Yusuf</span>
+                        <span class="title-word" style="--delay: 1">Düzgün</span>
+                    </span>
+                </h1>
+                <p class="hero-subtitle" id="hero-subtitle">
+                    Yaratıcı çözümler üreten, teknolojiye tutkulu bir geliştirici.
+                </p>
+                <div class="hero-actions" id="hero-actions">
+                    <a href="#projects" class="btn btn-primary" id="btn-projects">
+                        <span>Projelerimi Gör</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <a href="#contact" class="btn btn-secondary" id="btn-contact">
+                        <span>İletişime Geç</span>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="monitor" id="code-monitor">
+                    <div class="monitor-top-bar">
+                        <div class="monitor-dots">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <span class="monitor-filename">app.js</span>
+                        <span class="monitor-spacer"></span>
+                    </div>
+                    <div class="monitor-screen">
+                        <div class="code-lines" id="code-lines"></div>
+                    </div>
+                    <div class="monitor-stand">
+                        <div class="stand-neck"></div>
+                        <div class="stand-base"></div>
+                    </div>
+                    <div class="monitor-glow"></div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-scroll-indicator" id="scroll-indicator">
+            <div class="scroll-line"></div>
+            <span>Aşağı Kaydır</span>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">01</span>
+                <h2 class="section-title">Hakkımda</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="about-grid">
+                <div class="about-text reveal-up">
+                    <p class="about-intro">
+                        Merhaba! Ben <strong>Yusuf Düzgün</strong>. Yazılım geliştirme ve teknoloji dünyasına 
+                        büyük bir tutkuyla yaklaşıyorum. Kullanıcı deneyimini ön planda tutan, estetik ve 
+                        fonksiyonel projeler üretmeyi seviyorum.
+                    </p>
+                    <p>
+                        Sürekli öğrenmeye ve kendimi geliştirmeye odaklanıyorum. Her yeni proje, 
+                        yeni bir beceri kazanmak ve sınırlarımı zorlamak için bir fırsat.
+                    </p>
+                    <div class="pixel-coder-wrapper">
+                        <canvas id="pixel-coder-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="about-stats reveal-up">
+                    <div class="stat-card" id="stat-1">
+                        <span class="stat-number" data-target="10">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Proje</span>
+                    </div>
+                    <div class="stat-card" id="stat-2">
+                        <span class="stat-number" data-target="5">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Teknoloji</span>
+                    </div>
+                    <div class="stat-card" id="stat-3">
+                        <span class="stat-number" data-target="100">0</span><span class="stat-suffix">%</span>
+                        <span class="stat-label">Tutku</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">02</span>
+                <h2 class="section-title">Projeler</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="projects-grid">
+                <!-- Project 1 -->
+                <article class="project-card reveal-up" id="project-1">
+                    <div class="project-image">
+                        <div class="project-image-placeholder" style="--accent: #8B7355;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="project-info">
+                        <div class="project-tags">
+                            <span class="tag">Web</span>
+                            <span class="tag">React</span>
+                        </div>
+                        <h3 class="project-title">Kahve App</h3>
+                        <p class="project-desc">
+                            Kripto para ile kahve bağışı yapabileceğiniz modern bir web uygulaması. 
+                            Ethereum blockchain üzerinde çalışır.
+                        </p>
+                        <a href="https://skipsxbt-kahve.vercel.app/" target="_blank" rel="noopener" class="project-link" id="project-link-1">
+                            Detaylar
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 17L17 7M17 7H7M17 7v10"/>
+                            </svg>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Project 2 -->
+                <article class="project-card reveal-up" id="project-2">
+                    <div class="project-image">
+                        <div class="project-image-placeholder" style="--accent: #6B8F71;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                <path d="M8 21h8M12 17v4"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="project-info">
+                        <div class="project-tags">
+                            <span class="tag">Python</span>
+                            <span class="tag">Veri Bilimi</span>
+                        </div>
+                        <h3 class="project-title">Veri Analizi Projesi</h3>
+                        <p class="project-desc">
+                            Python kullanarak veri setleri üzerinde analiz ve görselleştirme 
+                            çalışmaları. Pandas ve Matplotlib ile güçlendirilmiş.
+                        </p>
+                        <a href="#" class="project-link" id="project-link-2">
+                            Detaylar
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 17L17 7M17 7H7M17 7v10"/>
+                            </svg>
+                        </a>
+                    </div>
+                </article>
+
+
+                <!-- Project 4 -->
+                <article class="project-card reveal-up" id="project-4">
+                    <div class="project-image">
+                        <div class="project-image-placeholder" style="--accent: #8D6B6B;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="project-info">
+                        <div class="project-tags">
+                            <span class="tag">JavaScript</span>
+                            <span class="tag">API</span>
+                        </div>
+                        <h3 class="project-title">Task Yöneticisi</h3>
+                        <p class="project-desc">
+                            Görev takibi ve proje yönetimi için geliştirilmiş, 
+                            sezgisel arayüzü ile kullanımı kolay bir web uygulaması.
+                        </p>
+                        <a href="#" class="project-link" id="project-link-4">
+                            Detaylar
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 17L17 7M17 7H7M17 7v10"/>
+                            </svg>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">03</span>
+                <h2 class="section-title">Yetenekler</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="skills-grid">
+                <div class="skill-item reveal-up" id="skill-1">
+                    <div class="skill-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h3>JavaScript</h3>
+                    <p>Modern ES6+, React, Node.js</p>
+                </div>
+                <div class="skill-item reveal-up" id="skill-2">
+                    <div class="skill-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M16 18l2-2v-4l-2-2M8 6L6 8v4l2 2"/>
+                            <path d="M14.5 4l-5 16"/>
+                        </svg>
+                    </div>
+                    <h3>Python</h3>
+                    <p>Veri analizi, otomasyon, scripting</p>
+                </div>
+                <div class="skill-item reveal-up" id="skill-3">
+                    <div class="skill-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18M9 21V9"/>
+                        </svg>
+                    </div>
+                    <h3>Web Tasarım</h3>
+                    <p>HTML, CSS, UI/UX tasarımı</p>
+                </div>
+                <div class="skill-item reveal-up" id="skill-4">
+                    <div class="skill-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h3>Blockchain</h3>
+                    <p>Ethereum, Solidity, Web3</p>
+                </div>
+                <div class="skill-item reveal-up" id="skill-5">
+                    <div class="skill-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                        </svg>
+                    </div>
+                    <h3>Problem Çözme</h3>
+                    <p>Algoritmik düşünme, optimizasyon</p>
+                </div>
+                <div class="skill-item reveal-up" id="skill-6">
+                    <div class="skill-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                    </div>
+                    <h3>Git & GitHub</h3>
+                    <p>Versiyon kontrol, işbirliği</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">04</span>
+                <h2 class="section-title">İletişim</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="contact-content">
+                <div class="contact-text reveal-up">
+                    <p>
+                        Bir proje fikriniz mi var? Ya da sadece merhaba demek mi istiyorsunuz? 
+                        Benimle iletişime geçmekten çekinmeyin.
+                    </p>
+                </div>
+                <form class="contact-form reveal-up" id="contact-form">
+                    <div class="form-group">
+                        <label for="name">İsim</label>
+                        <input type="text" id="name" name="name" placeholder="Adınızı girin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">E-posta</label>
+                        <input type="email" id="email" name="email" placeholder="E-posta adresinizi girin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Mesaj</label>
+                        <textarea id="message" name="message" rows="5" placeholder="Mesajınızı yazın..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="btn-submit">
+                        <span>Gönder</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="footer-logo">YD</span>
+                    <p>&copy; 2026 Yusuf Düzgün. Tüm hakları saklıdır.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/skipsxbt" target="_blank" rel="noopener" id="footer-github" aria-label="GitHub">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                    <a href="mailto:yusufduzgun933@gmail.com" id="footer-email" aria-label="Email">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            <path d="M22 7l-10 7L2 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
