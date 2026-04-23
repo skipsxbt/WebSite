@@ -279,6 +279,9 @@ input, textarea { font-family: inherit; }
 .news-error p { font-size:0.95rem; }
 .news-error svg { opacity:0.5; }
 
+/* News Updated Timestamp */
+.news-updated-timestamp { grid-column:1/-1; text-align:center; padding:1rem 0 0; font-size:0.78rem; color:var(--text-tertiary); letter-spacing:0.02em; opacity:0.7; }
+
 /* CONTACT */
 .contact-content { max-width:600px; margin:0 auto; }
 .contact-text { text-align:center; margin-bottom:2rem; }

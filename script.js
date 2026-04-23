@@ -874,19 +874,36 @@
 
 
     // --- Blockchain News Fetcher ---
+    const NEWS_COUNT = 6;
+    const NEWS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    let newsRefreshTimer = null;
+
+    // Primary: rss2json.com converts RSS to clean JSON (no CORS issues)
+    const RSS2JSON_SOURCES = [
+        {
+            url: 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.coindesk.com/arc/outboundfeeds/rss/'),
+            source: 'CoinDesk'
+        },
+        {
+            url: 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://cointelegraph.com/rss'),
+            source: 'CoinTelegraph'
+        }
+    ];
+
+    // Fallback: direct CORS proxies + raw RSS
     const COINDESK_RSS = 'https://www.coindesk.com/arc/outboundfeeds/rss/';
     const CORS_PROXIES = [
         'https://api.allorigins.win/raw?url=',
         'https://corsproxy.io/?url=',
         'https://api.codetabs.com/v1/proxy?quest='
     ];
-    const NEWS_COUNT = 6;
 
     function relativeTime(dateStr) {
         const now = new Date();
         const date = new Date(dateStr);
         const diff = Math.floor((now - date) / 1000);
 
+        if (isNaN(diff) || diff < 0) return '';
         if (diff < 60) return 'Az önce';
         if (diff < 3600) return Math.floor(diff / 60) + ' dk önce';
         if (diff < 86400) return Math.floor(diff / 3600) + ' saat önce';
@@ -894,6 +911,46 @@
         return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    // Parse rss2json.com JSON response into our article format
+    function parseRss2JsonResponse(data, sourceName) {
+        if (!data || data.status !== 'ok' || !Array.isArray(data.items)) return [];
+
+        return data.items.slice(0, NEWS_COUNT).map(item => {
+            // Get image from enclosure, thumbnail, or content
+            let imageUrl = '';
+            if (item.enclosure && item.enclosure.link) {
+                imageUrl = item.enclosure.link;
+            } else if (item.thumbnail) {
+                imageUrl = item.thumbnail;
+            }
+
+            // Get category from categories array
+            let category = 'Crypto';
+            if (Array.isArray(item.categories) && item.categories.length > 0) {
+                // Pick the first meaningful category
+                category = item.categories.find(c => c && c.length > 0 && c !== 'News') || item.categories[0] || 'Crypto';
+            }
+
+            // Clean description (remove HTML tags)
+            let description = (item.description || '').replace(/<[^>]*>/g, '').trim();
+            if (description.length > 200) {
+                description = description.substring(0, 197) + '...';
+            }
+
+            return {
+                title: item.title || '',
+                link: item.link || '#',
+                description: description,
+                pubDate: item.pubDate || '',
+                creator: item.author || sourceName,
+                imageUrl: imageUrl,
+                category: category,
+                source: sourceName
+            };
+        });
+    }
+
+    // Fallback: parse raw RSS XML
     function parseRSSNews(xmlText) {
         const parser = new DOMParser();
         const xml = parser.parseFromString(xmlText, 'text/xml');
@@ -904,25 +961,23 @@
             if (i >= NEWS_COUNT) return;
             const title = item.querySelector('title')?.textContent?.trim() || '';
             const link = item.querySelector('link')?.textContent?.trim() || '#';
-            const description = item.querySelector('description')?.textContent?.trim() || '';
+            const description = (item.querySelector('description')?.textContent?.trim() || '').replace(/<[^>]*>/g, '');
             const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
             const creator = item.querySelector('creator')?.textContent?.trim() || 'CoinDesk';
 
-            // Get image from media:content
             const mediaContent = item.querySelector('content');
             const imageUrl = mediaContent ? mediaContent.getAttribute('url') : '';
 
-            // Get category
             const categories = item.querySelectorAll('category');
             let category = 'Crypto';
             categories.forEach(cat => {
-                const domain = cat.getAttribute('domain') || '';
-                if (domain.includes('coindesk.com/') && domain !== 'https://www.coindesk.com/') {
-                    category = cat.textContent.trim();
+                const text = cat.textContent.trim();
+                if (text && text !== 'News') {
+                    category = text;
                 }
             });
 
-            articles.push({ title, link, description, pubDate, creator, imageUrl, category });
+            articles.push({ title, link, description, pubDate, creator, imageUrl, category, source: 'CoinDesk' });
         });
 
         return articles;
@@ -936,8 +991,10 @@
         if (loading) loading.style.display = 'none';
         if (error) error.style.display = 'none';
 
-        // Remove any existing news cards
+        // Remove any existing news cards and update timestamp
         grid.querySelectorAll('.news-card').forEach(c => c.remove());
+        const oldTimestamp = grid.querySelector('.news-updated-timestamp');
+        if (oldTimestamp) oldTimestamp.remove();
 
         articles.forEach((article, idx) => {
             const card = document.createElement('a');
@@ -948,8 +1005,13 @@
             card.id = `news-card-${idx + 1}`;
             card.style.animationDelay = `${idx * 0.08}s`;
 
+            const sourceName = article.source || 'CoinDesk';
+            const creatorDisplay = article.creator && article.creator !== sourceName
+                ? `${sourceName} — ${article.creator}`
+                : sourceName;
+
             const imgHtml = article.imageUrl
-                ? `<div class="news-card-img-wrapper"><img class="news-card-img" src="${article.imageUrl}" alt="${article.title.replace(/"/g, '&quot;')}" loading="lazy" onerror="this.style.display='none'"></div>`
+                ? `<div class="news-card-img-wrapper"><img class="news-card-img" src="${article.imageUrl}" alt="${article.title.replace(/"/g, '&quot;')}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'news-card-img\\' style=\\'display:flex;align-items:center;justify-content:center;color:var(--accent)\\'><svg width=\\'40\\' height=\\'40\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg></div>'"></div>`
                 : `<div class="news-card-img-wrapper"><div class="news-card-img" style="display:flex;align-items:center;justify-content:center;color:var(--accent);">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -966,7 +1028,7 @@
                     <h3 class="news-card-title">${article.title}</h3>
                     <p class="news-card-desc">${article.description}</p>
                     <span class="news-card-source">
-                        CoinDesk — ${article.creator}
+                        ${creatorDisplay}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M7 17L17 7M17 7H7M17 7v10"/>
                         </svg>
@@ -977,7 +1039,14 @@
             grid.appendChild(card);
         });
 
-        // Re-observe the new reveal-up elements
+        // Add updated timestamp
+        const timestamp = document.createElement('div');
+        timestamp.className = 'news-updated-timestamp';
+        const now = new Date();
+        timestamp.innerHTML = `<span>Son güncelleme: ${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} · Her 5 dakikada otomatik yenilenir</span>`;
+        grid.appendChild(timestamp);
+
+        // Animate cards in
         grid.querySelectorAll('.reveal-up').forEach(el => {
             el.classList.add('visible');
         });
@@ -997,39 +1066,83 @@
 
         if (!grid) return;
 
-        // Show loading, hide error
-        if (loading) loading.style.display = '';
+        // Show loading, hide error (but keep existing cards visible during refresh)
+        const existingCards = grid.querySelectorAll('.news-card');
+        if (existingCards.length === 0) {
+            if (loading) loading.style.display = '';
+        }
         if (error) error.style.display = 'none';
-        grid.querySelectorAll('.news-card').forEach(c => c.remove());
 
-        // Try each CORS proxy until one works
-        for (const proxy of CORS_PROXIES) {
+        // Strategy 1: Try rss2json.com (most reliable, returns clean JSON)
+        for (const src of RSS2JSON_SOURCES) {
             try {
-                const response = await fetch(proxy + encodeURIComponent(COINDESK_RSS));
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000);
+
+                const response = await fetch(src.url, { signal: controller.signal });
+                clearTimeout(timeout);
+
                 if (!response.ok) continue;
 
-                const text = await response.text();
-                if (!text.includes('<item>')) continue;
+                const data = await response.json();
+                const articles = parseRss2JsonResponse(data, src.source);
 
-                const articles = parseRSSNews(text);
                 if (articles.length > 0) {
                     renderNewsCards(articles);
+                    scheduleNewsRefresh();
                     return;
                 }
             } catch (err) {
-                console.warn('News proxy failed:', proxy, err);
+                console.warn('rss2json source failed:', src.source, err.message);
                 continue;
             }
         }
 
-        // All proxies failed — show error
-        showNewsError();
+        // Strategy 2: Try CORS proxies with raw RSS (fallback)
+        for (const proxy of CORS_PROXIES) {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 8000);
+
+                const response = await fetch(proxy + encodeURIComponent(COINDESK_RSS), { signal: controller.signal });
+                clearTimeout(timeout);
+
+                if (!response.ok) continue;
+
+                const text = await response.text();
+                if (!text.includes('<item>') && !text.includes('<item ')) continue;
+
+                const articles = parseRSSNews(text);
+                if (articles.length > 0) {
+                    renderNewsCards(articles);
+                    scheduleNewsRefresh();
+                    return;
+                }
+            } catch (err) {
+                console.warn('CORS proxy failed:', proxy, err.message);
+                continue;
+            }
+        }
+
+        // All strategies failed — show error only if no existing cards
+        if (grid.querySelectorAll('.news-card').length === 0) {
+            showNewsError();
+        }
+        // Still schedule a retry
+        scheduleNewsRefresh();
+    }
+
+    function scheduleNewsRefresh() {
+        if (newsRefreshTimer) clearTimeout(newsRefreshTimer);
+        newsRefreshTimer = setTimeout(() => {
+            loadBlockchainNews();
+        }, NEWS_REFRESH_INTERVAL);
     }
 
     // Expose globally for retry button
     window.loadBlockchainNews = loadBlockchainNews;
 
-    // Load news when the section comes into view
+    // Load news when the section comes into view, then auto-refresh
     const newsSection = document.getElementById('blockchain-news');
     if (newsSection) {
         const newsObserver = new IntersectionObserver((entries) => {
