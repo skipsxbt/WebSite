@@ -253,22 +253,61 @@
         });
     });
 
-    // --- Contact form ---
+    // --- Contact form (FormSubmit.co) ---
     const form = document.getElementById('contact-form');
     if (form) {
-        form.addEventListener('submit', e => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = form.querySelector('button[type="submit"]');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<span>Gönderildi! ✓</span>';
-            btn.style.background = '#6B8F71';
-            btn.style.borderColor = '#6B8F71';
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-                btn.style.background = '';
-                btn.style.borderColor = '';
-                form.reset();
-            }, 2500);
+
+            // Disable button and show loading state
+            btn.disabled = true;
+            btn.innerHTML = '<span>Gönderiliyor...</span>';
+            btn.style.opacity = '0.7';
+
+            try {
+                const formData = new FormData(form);
+
+                const response = await fetch('https://formsubmit.co/ajax/yusufduzgun933@gmail.com', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Success
+                    btn.innerHTML = '<span>Gönderildi! ✓</span>';
+                    btn.style.background = '#6B8F71';
+                    btn.style.borderColor = '#6B8F71';
+                    btn.style.opacity = '1';
+                    form.reset();
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.disabled = false;
+                    }, 3000);
+                } else {
+                    throw new Error(result.message || 'Gönderme hatası');
+                }
+            } catch (err) {
+                console.error('Form submission error:', err);
+                btn.innerHTML = '<span>Hata oluştu ✕</span>';
+                btn.style.background = '#c0392b';
+                btn.style.borderColor = '#c0392b';
+                btn.style.opacity = '1';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.disabled = false;
+                }, 3000);
+            }
         });
     }
 
