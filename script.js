@@ -950,6 +950,50 @@
         return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    // --- Translation: English → Turkish ---
+    // Uses MyMemory free translation API (no API key needed)
+    async function translateText(text) {
+        if (!text || text.trim().length === 0) return text;
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 6000);
+
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|tr`;
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeout);
+
+            if (!response.ok) return text;
+
+            const data = await response.json();
+            if (data && data.responseData && data.responseData.translatedText) {
+                const translated = data.responseData.translatedText;
+                // MyMemory returns original text in uppercase when it can't translate
+                if (translated === text.toUpperCase()) return text;
+                return translated;
+            }
+            return text;
+        } catch (err) {
+            console.warn('Translation failed:', err.message);
+            return text;
+        }
+    }
+
+    // Translate all articles' title and description to Turkish (in parallel)
+    async function translateArticles(articles) {
+        const translationPromises = articles.map(async (article) => {
+            const [translatedTitle, translatedDesc] = await Promise.all([
+                translateText(article.title),
+                translateText(article.description)
+            ]);
+            return {
+                ...article,
+                title: translatedTitle,
+                description: translatedDesc
+            };
+        });
+        return Promise.all(translationPromises);
+    }
+
     // Parse rss2json.com JSON response into our article format
     function parseRss2JsonResponse(data, sourceName) {
         if (!data || data.status !== 'ok' || !Array.isArray(data.items)) return [];
@@ -1127,7 +1171,9 @@
                 const articles = parseRss2JsonResponse(data, src.source);
 
                 if (articles.length > 0) {
-                    renderNewsCards(articles);
+                    // Translate articles to Turkish before rendering
+                    const translatedArticles = await translateArticles(articles);
+                    renderNewsCards(translatedArticles);
                     scheduleNewsRefresh();
                     return;
                 }
@@ -1153,7 +1199,9 @@
 
                 const articles = parseRSSNews(text);
                 if (articles.length > 0) {
-                    renderNewsCards(articles);
+                    // Translate articles to Turkish before rendering
+                    const translatedArticles = await translateArticles(articles);
+                    renderNewsCards(translatedArticles);
                     scheduleNewsRefresh();
                     return;
                 }
