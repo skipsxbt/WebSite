@@ -872,4 +872,175 @@
         pixelObserver.observe(pixelCanvas);
     }
 
+
+    // --- Blockchain News Fetcher ---
+    const COINDESK_RSS = 'https://www.coindesk.com/arc/outboundfeeds/rss/';
+    const CORS_PROXIES = [
+        'https://api.allorigins.win/raw?url=',
+        'https://corsproxy.io/?url=',
+        'https://api.codetabs.com/v1/proxy?quest='
+    ];
+    const NEWS_COUNT = 6;
+
+    function relativeTime(dateStr) {
+        const now = new Date();
+        const date = new Date(dateStr);
+        const diff = Math.floor((now - date) / 1000);
+
+        if (diff < 60) return 'Az önce';
+        if (diff < 3600) return Math.floor(diff / 60) + ' dk önce';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' saat önce';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' gün önce';
+        return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function parseRSSNews(xmlText) {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlText, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        const articles = [];
+
+        items.forEach((item, i) => {
+            if (i >= NEWS_COUNT) return;
+            const title = item.querySelector('title')?.textContent?.trim() || '';
+            const link = item.querySelector('link')?.textContent?.trim() || '#';
+            const description = item.querySelector('description')?.textContent?.trim() || '';
+            const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+            const creator = item.querySelector('creator')?.textContent?.trim() || 'CoinDesk';
+
+            // Get image from media:content
+            const mediaContent = item.querySelector('content');
+            const imageUrl = mediaContent ? mediaContent.getAttribute('url') : '';
+
+            // Get category
+            const categories = item.querySelectorAll('category');
+            let category = 'Crypto';
+            categories.forEach(cat => {
+                const domain = cat.getAttribute('domain') || '';
+                if (domain.includes('coindesk.com/') && domain !== 'https://www.coindesk.com/') {
+                    category = cat.textContent.trim();
+                }
+            });
+
+            articles.push({ title, link, description, pubDate, creator, imageUrl, category });
+        });
+
+        return articles;
+    }
+
+    function renderNewsCards(articles) {
+        const grid = document.getElementById('news-grid');
+        const loading = document.getElementById('news-loading');
+        const error = document.getElementById('news-error');
+
+        if (loading) loading.style.display = 'none';
+        if (error) error.style.display = 'none';
+
+        // Remove any existing news cards
+        grid.querySelectorAll('.news-card').forEach(c => c.remove());
+
+        articles.forEach((article, idx) => {
+            const card = document.createElement('a');
+            card.href = article.link;
+            card.target = '_blank';
+            card.rel = 'noopener';
+            card.className = 'news-card reveal-up';
+            card.id = `news-card-${idx + 1}`;
+            card.style.animationDelay = `${idx * 0.08}s`;
+
+            const imgHtml = article.imageUrl
+                ? `<div class="news-card-img-wrapper"><img class="news-card-img" src="${article.imageUrl}" alt="${article.title.replace(/"/g, '&quot;')}" loading="lazy" onerror="this.style.display='none'"></div>`
+                : `<div class="news-card-img-wrapper"><div class="news-card-img" style="display:flex;align-items:center;justify-content:center;color:var(--accent);">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                   </div></div>`;
+
+            card.innerHTML = `
+                ${imgHtml}
+                <div class="news-card-body">
+                    <div class="news-card-meta">
+                        <span class="news-card-category">${article.category}</span>
+                        <span class="news-card-date">${relativeTime(article.pubDate)}</span>
+                    </div>
+                    <h3 class="news-card-title">${article.title}</h3>
+                    <p class="news-card-desc">${article.description}</p>
+                    <span class="news-card-source">
+                        CoinDesk — ${article.creator}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 17L17 7M17 7H7M17 7v10"/>
+                        </svg>
+                    </span>
+                </div>
+            `;
+
+            grid.appendChild(card);
+        });
+
+        // Re-observe the new reveal-up elements
+        grid.querySelectorAll('.reveal-up').forEach(el => {
+            el.classList.add('visible');
+        });
+    }
+
+    function showNewsError() {
+        const loading = document.getElementById('news-loading');
+        const error = document.getElementById('news-error');
+        if (loading) loading.style.display = 'none';
+        if (error) error.style.display = 'flex';
+    }
+
+    async function loadBlockchainNews() {
+        const loading = document.getElementById('news-loading');
+        const error = document.getElementById('news-error');
+        const grid = document.getElementById('news-grid');
+
+        if (!grid) return;
+
+        // Show loading, hide error
+        if (loading) loading.style.display = '';
+        if (error) error.style.display = 'none';
+        grid.querySelectorAll('.news-card').forEach(c => c.remove());
+
+        // Try each CORS proxy until one works
+        for (const proxy of CORS_PROXIES) {
+            try {
+                const response = await fetch(proxy + encodeURIComponent(COINDESK_RSS));
+                if (!response.ok) continue;
+
+                const text = await response.text();
+                if (!text.includes('<item>')) continue;
+
+                const articles = parseRSSNews(text);
+                if (articles.length > 0) {
+                    renderNewsCards(articles);
+                    return;
+                }
+            } catch (err) {
+                console.warn('News proxy failed:', proxy, err);
+                continue;
+            }
+        }
+
+        // All proxies failed — show error
+        showNewsError();
+    }
+
+    // Expose globally for retry button
+    window.loadBlockchainNews = loadBlockchainNews;
+
+    // Load news when the section comes into view
+    const newsSection = document.getElementById('blockchain-news');
+    if (newsSection) {
+        const newsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    loadBlockchainNews();
+                    newsObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.05, rootMargin: '200px 0px' });
+        newsObserver.observe(newsSection);
+    }
+
 })();

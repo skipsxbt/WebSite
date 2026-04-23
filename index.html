@@ -28,6 +28,7 @@
             <div class="nav-links">
                 <a href="#about" class="nav-link" data-text="Hakkımda">Hakkımda</a>
                 <a href="#projects" class="nav-link" data-text="Projeler">Projeler</a>
+                <a href="#blockchain-news" class="nav-link" data-text="Blockchain">Blockchain</a>
                 <a href="#skills" class="nav-link" data-text="Yetenekler">Yetenekler</a>
                 <a href="#contact" class="nav-link" data-text="İletişim">İletişim</a>
             </div>
@@ -64,6 +65,7 @@
     <div id="mobile-menu">
         <a href="#about" class="mobile-link">Hakkımda</a>
         <a href="#projects" class="mobile-link">Projeler</a>
+        <a href="#blockchain-news" class="mobile-link">Blockchain Haberleri</a>
         <a href="#skills" class="mobile-link">Yetenekler</a>
         <a href="#contact" class="mobile-link">İletişim</a>
     </div>
@@ -265,11 +267,87 @@
         </div>
     </section>
 
+    <!-- Blockchain News Section -->
+    <section id="blockchain-news" class="section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">03</span>
+                <h2 class="section-title">Blockchain Haberleri</h2>
+                <div class="section-line"></div>
+            </div>
+            <p class="news-section-desc reveal-up">Kripto ve blockchain dünyasından en güncel haberler — CoinDesk kaynağından canlı olarak alınmaktadır.</p>
+            <div class="news-grid" id="news-grid">
+                <!-- Loading skeleton -->
+                <div class="news-skeleton" id="news-loading">
+                    <div class="skeleton-card">
+                        <div class="skeleton-img shimmer"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line shimmer" style="width:40%"></div>
+                            <div class="skeleton-line shimmer" style="width:90%"></div>
+                            <div class="skeleton-line shimmer" style="width:70%"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-img shimmer"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line shimmer" style="width:35%"></div>
+                            <div class="skeleton-line shimmer" style="width:85%"></div>
+                            <div class="skeleton-line shimmer" style="width:60%"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-img shimmer"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line shimmer" style="width:45%"></div>
+                            <div class="skeleton-line shimmer" style="width:80%"></div>
+                            <div class="skeleton-line shimmer" style="width:75%"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-img shimmer"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line shimmer" style="width:40%"></div>
+                            <div class="skeleton-line shimmer" style="width:88%"></div>
+                            <div class="skeleton-line shimmer" style="width:65%"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-img shimmer"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line shimmer" style="width:50%"></div>
+                            <div class="skeleton-line shimmer" style="width:82%"></div>
+                            <div class="skeleton-line shimmer" style="width:68%"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-img shimmer"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line shimmer" style="width:38%"></div>
+                            <div class="skeleton-line shimmer" style="width:90%"></div>
+                            <div class="skeleton-line shimmer" style="width:72%"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Error state -->
+                <div class="news-error" id="news-error" style="display:none">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                    <p>Haberler yüklenirken bir hata oluştu.</p>
+                    <button class="btn btn-secondary" id="news-retry-btn" onclick="loadBlockchainNews()">
+                        <span>Tekrar Dene</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Skills Section -->
     <section id="skills" class="section">
         <div class="container">
             <div class="section-header">
-                <span class="section-label">03</span>
+                <span class="section-label">04</span>
                 <h2 class="section-title">Yetenekler</h2>
                 <div class="section-line"></div>
             </div>
@@ -339,7 +417,7 @@
     <section id="contact" class="section">
         <div class="container">
             <div class="section-header">
-                <span class="section-label">04</span>
+                <span class="section-label">05</span>
                 <h2 class="section-title">İletişim</h2>
                 <div class="section-line"></div>
             </div>
